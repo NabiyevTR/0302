@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException;
 public class ClientHandler {
     private Server server;
     private Socket socket;
-    private final int SOCKET_TIMEOUT = 120_000;
+    private final int SOCKET_TIMEOUT = 0;//120_000;
 
     private DataInputStream in;
     private DataOutputStream out;
