@@ -14,7 +14,7 @@
     </stylesheets>
 
     <HBox fx:id="authPanel">
-        <TextField fx:id="loginField" promptText="login" HBox.hgrow="ALWAYS" />
+        <TextField fx:id="loginField" promptText="login" HBox.hgrow="ALWAYS"/>
         <PasswordField fx:id="passwordField" promptText="password" HBox.hgrow="ALWAYS" onAction="#trytoAuth"/>
         <Button text="auth" onAction="#trytoAuth" minWidth="100"/>
         <Button text="reg" onAction="#clickRegBtn" minWidth="100"/>
@@ -23,7 +23,7 @@
     <HBox VBox.vgrow="ALWAYS">
         <TextArea fx:id="textArea" HBox.hgrow="ALWAYS" editable="false" wrapText="true"/>
         <ListView fx:id="clientList" minWidth="120" visible="false" managed="false"
-        onMouseReleased="#clientListClicked"/>
+                  onMouseReleased="#clientListClicked"/>
     </HBox>
 
 

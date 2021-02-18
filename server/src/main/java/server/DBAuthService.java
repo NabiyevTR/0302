@@ -51,13 +51,12 @@ public class DBAuthService implements AuthService {
     @Override
     public String getNicknameByLoginAndPassword(String login, String password) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT `nickname`, `password` FROM `chat`.`users` WHERE `login`= ?")) {
+                "SELECT `nickname`, `password` FROM `users` WHERE `login`= ? AND `password`= ?")) {
             preparedStatement.setString(1, login);
+            preparedStatement.setString(2, password);
             resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                if (password.equals(resultSet.getString("password"))) {
-                    return resultSet.getString("nickname");
-                }
+                return resultSet.getString("nickname");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -76,7 +75,7 @@ public class DBAuthService implements AuthService {
         if (!containsUser(login, password)) return false;
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE `chat`.`users` SET `nickname` WHERE `login`=? AND `password` = ?")) {
+                "UPDATE `users` SET `nickname`=?  WHERE `login`=? AND `password` = ?")) {
             preparedStatement.setString(1, nickname);
             preparedStatement.setString(2, login);
             preparedStatement.setString(3, password);
@@ -89,13 +88,32 @@ public class DBAuthService implements AuthService {
         }
     }
 
+    @Override
+    public boolean changeNickName(String login, String nickname) {
+
+        if (!containsUser(login)) return false;
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                "UPDATE `users` SET `nickname`=?  WHERE `password` = ?")) {
+            preparedStatement.setString(1, nickname);
+            preparedStatement.setString(2, login);
+            preparedStatement.addBatch();
+            preparedStatement.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
 
     private boolean addUser(String login, String password, String nickname) {
 
         if (containsUser(login)) return false;
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO `chat`.`users` (`login`, `password`, `nickname`) VALUES  (?, ?, ?)")) {
+                "INSERT INTO `users` (`login`, `password`, `nickname`) VALUES  (?, ?, ?)")) {
             preparedStatement.setString(1, login);
             preparedStatement.setString(2, password);
             preparedStatement.setString(3, nickname);

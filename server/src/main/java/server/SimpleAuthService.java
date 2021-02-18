@@ -61,6 +61,13 @@ public class SimpleAuthService implements AuthService {
     }
 
     @Override
+    public boolean changeNickName(String login, String newNickname) {
+        //Unsupported operation
+        return false;
+    }
+
+
+    @Override
     public void close() throws IOException {
 
     }

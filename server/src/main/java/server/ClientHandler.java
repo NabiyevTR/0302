@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException;
 public class ClientHandler {
     private Server server;
     private Socket socket;
-    private final int SOCKET_TIMEOUT = 0;//120_000;
+    private final int SOCKET_TIMEOUT = 120_000;
 
     private DataInputStream in;
     private DataOutputStream out;
@@ -49,6 +49,7 @@ public class ClientHandler {
                                         nickname = newNick;
                                         sendMsg(Command.AUTH_OK + " " + nickname);
                                         server.subscribe(this);
+
                                         break;
                                     } else {
                                         sendMsg("С этим логинов уже вошли");
@@ -91,6 +92,27 @@ public class ClientHandler {
                                     continue;
                                 }
                                 server.privateMsg(this, token[1], token[2]);
+                            }
+
+                            if (str.startsWith(Command.CHANGE_NICK)) {
+                                String[] token = str.trim().split("\\s+");
+
+                                if (token.length != 2) {
+                                    sendMsg(Command.CHANGE_NICK_NO);
+                                    continue;
+                                }
+
+                                if (server.getAuthService().changeNickName(login, token[1])) {
+                                    sendMsg(Command.CHANGE_NICK_OK + " " + token[1]);
+                                    server.broadcastMsg(this,
+                                            String.format("[%s] now is [%s]", nickname, token[1])
+                                    );
+                                    nickname = token[1];
+                                    server.broadcastClientList();
+                                } else {
+                                    sendMsg(Command.CHANGE_NICK_NO);
+                                }
+                                continue;
                             }
                         } else {
                             server.broadcastMsg(this, str);

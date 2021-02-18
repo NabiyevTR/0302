@@ -124,6 +124,7 @@ public class Controller implements Initializable {
                             if (str.equals(Command.REG_NO)) {
                                 regController.resultTryToReg(false);
                             }
+
                         } else {
                             textArea.appendText(str + "\n");
                         }
@@ -148,6 +149,16 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
+                            if (str.startsWith(Command.CHANGE_NICK_NO)) {
+                                textArea.appendText("Ошибка при смене никнейма\n");
+                            }
+
+                            if (str.startsWith(Command.CHANGE_NICK_OK)) {
+                                String[] token = str.split("\\s");
+                                nickname = token[1];
+                                setTitle(nickname);
+                            }
+
                         } else {
                             textArea.appendText(str + "\n");
                         }
@@ -208,6 +219,7 @@ public class Controller implements Initializable {
             }
         });
     }
+
 
     public void clientListClicked(MouseEvent mouseEvent) {
         System.out.println(clientList.getSelectionModel().getSelectedItem());
