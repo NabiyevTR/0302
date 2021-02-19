@@ -1,5 +1,6 @@
 package server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +10,8 @@ public class SimpleAuthService implements AuthService {
         String login;
         String password;
         String nickname;
+
+
 
         public UserData(String login, String password, String nickname) {
             this.login = login;
@@ -49,5 +52,23 @@ public class SimpleAuthService implements AuthService {
         }
         users.add(new UserData(login, password, nickname));
         return true;
+    }
+
+    @Override
+    public boolean changeNickName(String login, String password, String nickname) {
+        //Unsupported operation
+        return false;
+    }
+
+    @Override
+    public boolean changeNickName(String login, String newNickname) {
+        //Unsupported operation
+        return false;
+    }
+
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

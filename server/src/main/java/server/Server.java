@@ -18,7 +18,8 @@ public class Server {
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        authService = new SimpleAuthService();
+        //authService = new SimpleAuthService();
+        authService = new DBAuthService();
         try {
             server = new ServerSocket(PORT);
             System.out.println("server started");
@@ -33,6 +34,7 @@ public class Server {
             e.printStackTrace();
         } finally {
             try {
+                authService.close();
                 server.close();
             } catch (IOException e) {
                 e.printStackTrace();

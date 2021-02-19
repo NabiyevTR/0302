@@ -44,7 +44,7 @@ public class RegController {
         if (flag) {
             textArea.appendText("Регистрация прошла успешно\n");
         } else {
-            textArea.appendText("Регистрация не получилось\n" +
+            textArea.appendText("Ошибка при регистрации\n" +
                     "Возможно логин или никнейм уже заняты\n");
         }
     }
