@@ -12,5 +12,7 @@ public class Command {
     public static final String CHANGE_NICK_OK = "/chnickok";
     public static final String CHANGE_NICK_NO = "/chnickno";
     public static final String CHANGE_NICK = "/chnick";
+    public static final String MESSAGES = "/logMsg";
+    public static final String GET_MESSAGES = "/getLogMsg";
 
 }
