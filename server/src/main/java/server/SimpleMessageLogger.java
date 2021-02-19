@@ -1,9 +1,7 @@
 package server;
 
 import java.io.*;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class SimpleMessageLogger implements MessageLogger {
@@ -13,7 +11,7 @@ public class SimpleMessageLogger implements MessageLogger {
     private File logFile;
     private BufferedWriter writer;
     private BufferedReader reader;
-    private int numberOfMessagesToRead = NUMBER_OF_MESSAGES_TO_READ;
+    private volatile int numberOfMessagesToRead = NUMBER_OF_MESSAGES_TO_READ;
 
     public SimpleMessageLogger(String path) throws NullPointerException {
         setFile(path);
@@ -45,13 +43,13 @@ public class SimpleMessageLogger implements MessageLogger {
     }
 
     @Override
-    public void setFile(String path) {
+    public synchronized void setFile(String path) {
         if (path == null) throw new NullPointerException("File name is null.");
         logFile = new File(path);
     }
 
     @Override
-    public String read() {
+    public synchronized String read() {
 
         List<String> messageList = new ArrayList<>();
 
@@ -77,7 +75,7 @@ public class SimpleMessageLogger implements MessageLogger {
     }
 
     @Override
-    public void write(String message) {
+    public synchronized void write(String message) {
 
         try {
             writer.write(message);

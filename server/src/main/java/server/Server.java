@@ -57,7 +57,7 @@ public class Server {
         logMessage(message);
     }
 
-    public void logMessage(String msg) {
+    public  void logMessage(String msg) {
         messageLogger.write(msg);
     }
 
