@@ -2,3 +2,7 @@
 client/target/classes/client/Main.class
 
 *.class
+
+server/mysql-connector-java-8.0.23.jar
+
+.idea/uiDesigner.xml

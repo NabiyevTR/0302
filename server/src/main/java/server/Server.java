@@ -13,16 +13,22 @@ public class Server {
     private ServerSocket server;
     private Socket socket;
     private final int PORT = 8189;
-    private List<ClientHandler> clients;
-    private AuthService authService;
+    private final List<ClientHandler> clients;
+    private final AuthService authService;
+    private final MessageLogger messageLogger;
+    //private final String LOG_FILE_PATH = "C:\\Users\\HP 8570W\\Google Диск\\Программирование\\java\\03\\0302\\server\\src\\main\\resources";
+    private final String LOG_FILE_PATH = "C:\\test\\chatLog.txt";
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        //authService = new SimpleAuthService();
         authService = new DBAuthService();
+        messageLogger = new SimpleMessageLogger(LOG_FILE_PATH);
+        messageLogger.setNumberOfMessagesToRead(3);
+
+
         try {
             server = new ServerSocket(PORT);
-            System.out.println("server started");
+            System.out.println("Server started.");
 
             while (true) {
                 socket = server.accept();
@@ -34,6 +40,7 @@ public class Server {
             e.printStackTrace();
         } finally {
             try {
+                messageLogger.close();
                 authService.close();
                 server.close();
             } catch (IOException e) {
@@ -47,20 +54,29 @@ public class Server {
         for (ClientHandler c : clients) {
             c.sendMsg(message);
         }
+        logMessage(message);
+    }
+
+    public void logMessage(String msg) {
+        messageLogger.write(msg);
+    }
+
+    public String getLoggedMessages() {
+        return messageLogger.read();
     }
 
     public void privateMsg(ClientHandler sender, String receiver, String msg) {
         String message = String.format("[ %s ] to [ %s ]: %s", sender.getNickname(), receiver, msg);
         for (ClientHandler c : clients) {
-            if(c.getNickname().equals(receiver)){
+            if (c.getNickname().equals(receiver)) {
                 c.sendMsg(message);
-                if(!c.equals(sender)){
+                if (!c.equals(sender)) {
                     sender.sendMsg(message);
                 }
                 return;
             }
         }
-        sender.sendMsg("not found user: "+ receiver);
+        sender.sendMsg("not found user: " + receiver);
     }
 
     public void subscribe(ClientHandler clientHandler) {
@@ -77,16 +93,16 @@ public class Server {
         return authService;
     }
 
-    public boolean isLoginAuthenticated(String login){
+    public boolean isLoginAuthenticated(String login) {
         for (ClientHandler c : clients) {
-            if(c.getLogin().equals(login)){
+            if (c.getLogin().equals(login)) {
                 return true;
             }
         }
         return false;
     }
 
-    public void broadcastClientList(){
+    public void broadcastClientList() {
         StringBuilder sb = new StringBuilder(Command.CLIENT_LIST);
         for (ClientHandler c : clients) {
             sb.append(" ").append(c.getNickname());
