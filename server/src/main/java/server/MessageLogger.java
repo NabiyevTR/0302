@@ -12,4 +12,8 @@ public interface MessageLogger extends Closeable {
     void write(String message);
 
     void setNumberOfMessagesToRead(int numberOfMessagesToRead);
+
+    default boolean isActive () {
+        return true;
+    }
 }

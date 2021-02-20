@@ -32,7 +32,7 @@ public class Server {
 
             while (true) {
                 socket = server.accept();
-                System.out.println("client connected" + socket.getRemoteSocketAddress());
+                System.out.println("Client connected " + socket.getRemoteSocketAddress());
                 new ClientHandler(this, socket);
             }
 
@@ -57,8 +57,10 @@ public class Server {
         logMessage(message);
     }
 
-    public  void logMessage(String msg) {
-        messageLogger.write(msg);
+    public void logMessage(String msg) {
+        if (messageLogger.isActive()) {
+            messageLogger.write(msg);
+        }
     }
 
     public String getLoggedMessages() {
@@ -76,7 +78,7 @@ public class Server {
                 return;
             }
         }
-        sender.sendMsg("not found user: " + receiver);
+        sender.sendMsg("Don't find user: " + receiver);
     }
 
     public void subscribe(ClientHandler clientHandler) {
@@ -107,9 +109,7 @@ public class Server {
         for (ClientHandler c : clients) {
             sb.append(" ").append(c.getNickname());
         }
-
         String message = sb.toString();
-
         for (ClientHandler c : clients) {
             c.sendMsg(message);
         }

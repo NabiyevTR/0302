@@ -28,12 +28,12 @@ public class RegController {
         String nickname = nicknameField.getText().trim();
 
         if (login.length() * password.length() * nickname.length() == 0) {
-            textArea.appendText("Логин пароль и ник не должны быть пустыми\n");
+            textArea.appendText("Login, password and nickname must not be empty.\n");
             return;
         }
 
         if (login.contains(" ") || password.contains(" ") || nickname.contains(" ")) {
-            textArea.appendText("Логин пароль и ник не должны содержить пробелов\n");
+            textArea.appendText("Login, password and nickname must not contain spaces.\n");
             return;
         }
 
@@ -42,10 +42,10 @@ public class RegController {
 
     public void resultTryToReg(boolean flag) {
         if (flag) {
-            textArea.appendText("Регистрация прошла успешно\n");
+            textArea.appendText("Registration completed successfully.\n");
         } else {
-            textArea.appendText("Ошибка при регистрации\n" +
-                    "Возможно логин или никнейм уже заняты\n");
+            textArea.appendText("An error has occurred during registration.\n" +
+                    "Probably the username or nickname is already taken.\n");
         }
     }
 }

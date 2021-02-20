@@ -40,10 +40,12 @@ public class ClientHandler {
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
-                } catch (RuntimeException | IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
+                } catch (RuntimeException e) {
+                    System.out.println(e.getMessage());
                 } finally {
-                    System.out.println("Client disconnected");
+                    System.out.printf("Client %s disconnected.\n", socket.getRemoteSocketAddress());
                     server.unsubscribe(this);
                     try {
                         socket.close();
@@ -61,17 +63,16 @@ public class ClientHandler {
 
     private void authentication() throws IOException {
         while (true) {
-            String str = in.readUTF();
+            String msg = in.readUTF();
 
-            if (str.equals(Command.END)) {
+            if (msg.equals(Command.END)) {
                 endConnection();
 
-            } else if (str.startsWith(Command.AUTH)) {
-                if (authUser(str)) {
-                }
+            } else if (msg.startsWith(Command.AUTH)) {
+                if (authUser(msg)) break;
 
-            } else if (str.startsWith(Command.REG)) {
-                regUser(str);
+            } else if (msg.startsWith(Command.REG)) {
+                regUser(msg);
             }
         }
     }
@@ -82,6 +83,9 @@ public class ClientHandler {
             String message = in.readUTF();
 
             if (message.startsWith("/")) {
+
+                System.out.printf("Request from %s: %s.\n", socket.getRemoteSocketAddress(), message);
+
                 if (message.equals(Command.END)) {
                     endConnection();
                     break;
@@ -114,7 +118,7 @@ public class ClientHandler {
     }
 
     public void sendMsg(String msg) {
-        if (msg==null) return;
+        if (msg == null) return;
         try {
             out.writeUTF(msg);
         } catch (IOException e) {
@@ -122,17 +126,20 @@ public class ClientHandler {
         }
     }
 
-    private void endConnection() {
-        System.out.println("client want to disconnected ");
+    private void endConnection() throws RuntimeException {
         sendMsg(Command.END);
-        throw new RuntimeException("client want to disconnected");
+        throw new RuntimeException(
+                String.format("Client %s wants to disconnect.", socket.getRemoteSocketAddress()));
     }
 
     private boolean authUser(String msg) throws SocketException {
-        if (msg ==null) return false;
+        if (msg == null) return false;
         String[] token = msg.split("\\s");
-        String newNick = server.getAuthService()
-                .getNicknameByLoginAndPassword(token[1], token[2]);
+        if (token.length != 3) {
+            sendMsg("Wrong login or password.");
+            return false;
+        }
+        String newNick = server.getAuthService().getNicknameByLoginAndPassword(token[1], token[2]);
         login = token[1];
         if (newNick != null) {
             if (!server.isLoginAuthenticated(login)) {
@@ -142,10 +149,10 @@ public class ClientHandler {
                 server.subscribe(this);
                 return true;
             } else {
-                sendMsg("С этим логинов уже вошли");
+                sendMsg("Already signed in with this login");
             }
         } else {
-            sendMsg("Неверный логин / пароль");
+            sendMsg("Wrong login or password.");
         }
         return false;
     }

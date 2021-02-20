@@ -104,7 +104,8 @@ public class Controller implements Initializable {
 
             new Thread(() -> {
                 try {
-                    authentification();
+                    authentication();
+                    requestMessages();
                     process();
                 } catch (RuntimeException | IOException e) {
                     e.printStackTrace();
@@ -122,14 +123,17 @@ public class Controller implements Initializable {
         }
     }
 
+    private void requestMessages() throws IOException {
+        out.writeUTF(Command.GET_MESSAGES);
+    }
 
-    private void authentification() throws IOException {
+    private void authentication() throws IOException {
         while (true) {
             String str = in.readUTF();
             if (str.startsWith("/")) {
                 if (str.equals(Command.END)) {
-                    System.out.println("server disconnected us");
-                    throw new RuntimeException("server disconnected us");
+                    System.out.println("Client was disconnected by server.");
+                    throw new RuntimeException("Client was disconnected by server.");
                 }
 
                 if (str.startsWith(Command.AUTH_OK)) {
@@ -173,7 +177,7 @@ public class Controller implements Initializable {
                 }
 
                 if (str.startsWith(Command.CHANGE_NICK_NO)) {
-                    textArea.appendText("Ошибка при смене никнейма\n");
+                    textArea.appendText("Error during changing nickname.\n");
                 }
 
                 if (str.startsWith(Command.CHANGE_NICK_OK)) {
@@ -191,7 +195,9 @@ public class Controller implements Initializable {
             } else {
                 textArea.appendText(str + "\n");
             }
+
         }
+
     }
 
 
@@ -207,7 +213,7 @@ public class Controller implements Initializable {
         }
     }
 
-    public void trytoAuth(ActionEvent actionEvent) {
+    public void tryToAuth(ActionEvent actionEvent) {
         if (socket == null || socket.isClosed()) {
             connect();
         }
@@ -224,13 +230,12 @@ public class Controller implements Initializable {
     private void setTitle(String title) {
         Platform.runLater(() -> {
             if (title.equals("")) {
-                stage.setTitle("Квазимодо");
+                stage.setTitle("Chat");
             } else {
-                stage.setTitle(String.format("Квазимодо [ %s ]", title));
+                stage.setTitle(String.format("Chat [ %s ]", title));
             }
         });
     }
-
 
     public void clientListClicked(MouseEvent mouseEvent) {
         System.out.println(clientList.getSelectionModel().getSelectedItem());
@@ -254,7 +259,7 @@ public class Controller implements Initializable {
             regController.setController(this);
 
             regStage = new Stage();
-            regStage.setTitle("Квазимодо регистрация");
+            regStage.setTitle("Chat registration");
             regStage.setScene(new Scene(root, 400, 300));
 
             regStage.initModality(Modality.APPLICATION_MODAL);

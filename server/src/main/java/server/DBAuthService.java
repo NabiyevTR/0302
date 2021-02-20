@@ -10,16 +10,23 @@ public class DBAuthService implements AuthService {
     private static final String user = "root";
     private static final String password = "123456";
 
+    private static final String sqlSelectNicknameAndPasswordByLoginAndPassword = "SELECT `nickname`, `password` FROM `users` WHERE `login`= ? AND `password`= ?";
+    private static final String sqlUpdateByLoginAndPassword = "UPDATE `users` SET `nickname`=?  WHERE `login`=? AND `password` = ?";
+    private static final String sqlUpdateByLogin = "UPDATE `users` SET `nickname`=?  WHERE `password` = ?";
+    private static final String sqlInsertUser = "INSERT INTO `users` (`login`, `password`, `nickname`) VALUES  (?, ?, ?)";
+    private static final String sqlSelectLoginByLoginAndPassword = "SELECT `login` FROM `users` WHERE `login`=? AND `password`=? ";
+    private static final String sqlSelectLoginByLogin = "SELECT `login` FROM `users` WHERE `login`=?";
+
     private static Connection connection;
     private static ResultSet resultSet;
-
 
     public DBAuthService() {
         try {
             init();
             connection = DriverManager.getConnection(url, user, password);
+            System.out.println("Auth service started.");
         } catch (Exception e) {
-            System.out.println("Connection failed...");
+            System.out.println("Auth service failed to start.");
             System.out.println(e);
         } finally {
             try {
@@ -45,13 +52,11 @@ public class DBAuthService implements AuthService {
 
     private void init() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
-        System.out.println("Connection successful!");
     }
 
     @Override
     public String getNicknameByLoginAndPassword(String login, String password) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT `nickname`, `password` FROM `users` WHERE `login`= ? AND `password`= ?")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectNicknameAndPasswordByLoginAndPassword)) {
             preparedStatement.setString(1, login);
             preparedStatement.setString(2, password);
             resultSet = preparedStatement.executeQuery();
@@ -74,8 +79,7 @@ public class DBAuthService implements AuthService {
     public boolean changeNickName(String login, String password, String nickname) {
         if (!containsUser(login, password)) return false;
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE `users` SET `nickname`=?  WHERE `login`=? AND `password` = ?")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdateByLoginAndPassword)) {
             preparedStatement.setString(1, nickname);
             preparedStatement.setString(2, login);
             preparedStatement.setString(3, password);
@@ -93,8 +97,7 @@ public class DBAuthService implements AuthService {
 
         if (!containsUser(login)) return false;
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE `users` SET `nickname`=?  WHERE `password` = ?")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdateByLogin)) {
             preparedStatement.setString(1, nickname);
             preparedStatement.setString(2, login);
             preparedStatement.addBatch();
@@ -107,13 +110,11 @@ public class DBAuthService implements AuthService {
 
     }
 
-
     private boolean addUser(String login, String password, String nickname) {
 
         if (containsUser(login)) return false;
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO `users` (`login`, `password`, `nickname`) VALUES  (?, ?, ?)")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlInsertUser)) {
             preparedStatement.setString(1, login);
             preparedStatement.setString(2, password);
             preparedStatement.setString(3, nickname);
@@ -128,8 +129,7 @@ public class DBAuthService implements AuthService {
     }
 
     private boolean containsUser(String login, String password) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT `login` FROM `users` WHERE `login`=? AND `password`=? ")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectLoginByLoginAndPassword)) {
             preparedStatement.setString(1, login);
             preparedStatement.setString(2, password);
             resultSet = preparedStatement.executeQuery();
@@ -145,8 +145,7 @@ public class DBAuthService implements AuthService {
     }
 
     private boolean containsUser(String login) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT `login` FROM `users` WHERE `login`=?")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectLoginByLogin)) {
             preparedStatement.setString(1, login);
             resultSet = preparedStatement.executeQuery();
             if (resultSet == null) return false;
@@ -159,8 +158,6 @@ public class DBAuthService implements AuthService {
         }
         return false;
     }
-
-
 }
 
 

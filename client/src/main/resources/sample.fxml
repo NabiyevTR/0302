@@ -15,8 +15,8 @@
 
     <HBox fx:id="authPanel">
         <TextField fx:id="loginField" promptText="login" HBox.hgrow="ALWAYS"/>
-        <PasswordField fx:id="passwordField" promptText="password" HBox.hgrow="ALWAYS" onAction="#trytoAuth"/>
-        <Button text="auth" onAction="#trytoAuth" minWidth="100"/>
+        <PasswordField fx:id="passwordField" promptText="password" HBox.hgrow="ALWAYS" onAction="#tryToAuth"/>
+        <Button text="auth" onAction="#tryToAuth" minWidth="100"/>
         <Button text="reg" onAction="#clickRegBtn" minWidth="100"/>
     </HBox>
 
