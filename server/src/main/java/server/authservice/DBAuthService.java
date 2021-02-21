@@ -1,4 +1,4 @@
-package server;
+package server.authservice;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -17,8 +17,8 @@ public class DBAuthService implements AuthService {
     private static final String sqlSelectLoginByLoginAndPassword = "SELECT `login` FROM `users` WHERE `login`=? AND `password`=? ";
     private static final String sqlSelectLoginByLogin = "SELECT `login` FROM `users` WHERE `login`=?";
 
-    private static Connection connection;
-    private static ResultSet resultSet;
+    private  Connection connection;
+    private  ResultSet resultSet;
 
     public DBAuthService() {
         try {
@@ -28,10 +28,10 @@ public class DBAuthService implements AuthService {
         } catch (Exception e) {
             System.out.println("Auth service failed to start.");
             System.out.println(e);
-        } finally {
             try {
                 close();
-            } catch (Exception e) {
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
             }
         }
     }

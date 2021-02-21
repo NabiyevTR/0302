@@ -1,7 +1,6 @@
-package server;
+package server.messagelogger;
 
 import java.io.*;
-import java.net.Socket;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +15,22 @@ public class SimpleMessageLogger implements MessageLogger {
     boolean isActive = false;
 
     public SimpleMessageLogger(String path) throws NullPointerException {
+        init(path);
+    }
 
-        setFile(path);
+    public void init(String path) {
+
+          try {
+              setFile(path);
+          } catch (NullPointerException e) {
+              System.out.println(e.getMessage());
+              isActive = false;
+          }
 
         try {
             writer = new BufferedWriter(new FileWriter(logFile, true));
             System.out.println("Message logger started.");
-            isActive =true;
+            isActive = true;
         } catch (IOException e) {
             System.out.println("IO error in SimpleMessageLogger.");
             try {
@@ -32,6 +40,7 @@ public class SimpleMessageLogger implements MessageLogger {
             }
         }
     }
+
     @Override
     public boolean isActive() {
         return isActive;
@@ -53,7 +62,7 @@ public class SimpleMessageLogger implements MessageLogger {
         logFile = new File(path);
         if (!Files.isWritable(logFile.toPath())) {
             System.out.printf("Cannot write to %s. File is already opened by another application", logFile.getName());
-            isActive= false;
+            isActive = false;
         }
     }
 

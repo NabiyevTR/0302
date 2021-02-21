@@ -1,4 +1,4 @@
-package server;
+package server.messagelogger;
 
 import java.io.Closeable;
 import java.io.File;

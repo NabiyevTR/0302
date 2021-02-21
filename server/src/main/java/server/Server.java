@@ -1,10 +1,18 @@
 package server;
 
 import commands.Command;
+import server.authservice.AuthService;
+import server.authservice.DBAuthService;
+import server.messagecorrector.SimpleWordCorrector;
+import server.messagecorrector.WordCorrector;
+import server.messagelogger.MessageLogger;
+import server.messagelogger.SimpleMessageLogger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -16,6 +24,7 @@ public class Server {
     private final List<ClientHandler> clients;
     private final AuthService authService;
     private final MessageLogger messageLogger;
+    private final  WordCorrector wordCorrector;
     //private final String LOG_FILE_PATH = "C:\\Users\\HP 8570W\\Google Диск\\Программирование\\java\\03\\0302\\server\\src\\main\\resources";
     private final String LOG_FILE_PATH = "C:\\test\\chatLog.txt";
 
@@ -24,7 +33,9 @@ public class Server {
         authService = new DBAuthService();
         messageLogger = new SimpleMessageLogger(LOG_FILE_PATH);
         messageLogger.setNumberOfMessagesToRead(3);
-
+        wordCorrector = new SimpleWordCorrector();
+        HashMap<String, String> map = new LinkedHashMap<>();
+        wordCorrector.forceAddAll(map);
 
         try {
             server = new ServerSocket(PORT);
@@ -40,6 +51,7 @@ public class Server {
             e.printStackTrace();
         } finally {
             try {
+                wordCorrector.close();
                 messageLogger.close();
                 authService.close();
                 server.close();
@@ -50,6 +62,10 @@ public class Server {
     }
 
     public void broadcastMsg(ClientHandler sender, String msg) {
+        if (wordCorrector.isActive()) {
+            msg = wordCorrector.getCorrectedText(msg);
+        }
+
         String message = String.format("[ %s ] : %s", sender.getNickname(), msg);
         for (ClientHandler c : clients) {
             c.sendMsg(message);
@@ -68,6 +84,10 @@ public class Server {
     }
 
     public void privateMsg(ClientHandler sender, String receiver, String msg) {
+        if (wordCorrector.isActive()) {
+            msg = wordCorrector.getCorrectedText(msg);
+        }
+
         String message = String.format("[ %s ] to [ %s ]: %s", sender.getNickname(), receiver, msg);
         for (ClientHandler c : clients) {
             if (c.getNickname().equals(receiver)) {
