@@ -1,4 +1,4 @@
-package server;
+package server.authservice;
 
 import java.io.Closeable;
 

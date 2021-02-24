@@ -104,68 +104,10 @@ public class Controller implements Initializable {
 
             new Thread(() -> {
                 try {
-                    //цикл аутентификации
-                    while (true) {
-                        String str = in.readUTF();
-                        if (str.startsWith("/")) {
-                            if (str.equals(Command.END)) {
-                                System.out.println("server disconnected us");
-                                throw new RuntimeException("server disconnected us");
-                            }
-                            if (str.startsWith(Command.AUTH_OK)) {
-                                nickname = str.split("\\s")[1];
-                                setAuthenticated(true);
-                                break;
-                            }
-
-                            if (str.equals(Command.REG_OK)) {
-                                regController.resultTryToReg(true);
-                            }
-                            if (str.equals(Command.REG_NO)) {
-                                regController.resultTryToReg(false);
-                            }
-
-                        } else {
-                            textArea.appendText(str + "\n");
-                        }
-                    }
-
-                    //цикл работы
-                    while (true) {
-                        String str = in.readUTF();
-
-                        if (str.startsWith("/")) {
-                            if (str.equals(Command.END)) {
-                                setAuthenticated(false);
-                                break;
-                            }
-
-                            if (str.startsWith(Command.CLIENT_LIST)) {
-                                String[] token = str.split("\\s");
-                                Platform.runLater(() -> {
-                                    clientList.getItems().clear();
-                                    for (int i = 1; i < token.length; i++) {
-                                        clientList.getItems().add(token[i]);
-                                    }
-                                });
-                            }
-                            if (str.startsWith(Command.CHANGE_NICK_NO)) {
-                                textArea.appendText("Ошибка при смене никнейма\n");
-                            }
-
-                            if (str.startsWith(Command.CHANGE_NICK_OK)) {
-                                String[] token = str.split("\\s");
-                                nickname = token[1];
-                                setTitle(nickname);
-                            }
-
-                        } else {
-                            textArea.appendText(str + "\n");
-                        }
-                    }
-                } catch (RuntimeException e) {
-                    System.out.println(e.getMessage());
-                } catch (IOException e) {
+                    authentication();
+                    requestMessages();
+                    process();
+                } catch (RuntimeException | IOException e) {
                     e.printStackTrace();
                 } finally {
                     setAuthenticated(false);
@@ -175,12 +117,87 @@ public class Controller implements Initializable {
                         e.printStackTrace();
                     }
                 }
-
             }).start();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void requestMessages() throws IOException {
+        out.writeUTF(Command.GET_MESSAGES);
+    }
+
+    private void authentication() throws IOException {
+        while (true) {
+            String str = in.readUTF();
+            if (str.startsWith("/")) {
+                if (str.equals(Command.END)) {
+                    System.out.println("Client was disconnected by server.");
+                    throw new RuntimeException("Client was disconnected by server.");
+                }
+
+                if (str.startsWith(Command.AUTH_OK)) {
+                    nickname = str.split("\\s")[1];
+                    setAuthenticated(true);
+                    break;
+                }
+
+                if (str.equals(Command.REG_OK)) {
+                    regController.resultTryToReg(true);
+                }
+
+                if (str.equals(Command.REG_NO)) {
+                    regController.resultTryToReg(false);
+                }
+
+            } else {
+                textArea.appendText(str + "\n");
+            }
+        }
+    }
+
+    private void process() throws IOException {
+        while (true) {
+            String str = in.readUTF();
+
+            if (str.startsWith("/")) {
+                if (str.equals(Command.END)) {
+                    setAuthenticated(false);
+                    break;
+                }
+
+                if (str.startsWith(Command.CLIENT_LIST)) {
+                    String[] token = str.split("\\s");
+                    Platform.runLater(() -> {
+                        clientList.getItems().clear();
+                        for (int i = 1; i < token.length; i++) {
+                            clientList.getItems().add(token[i]);
+                        }
+                    });
+                }
+
+                if (str.startsWith(Command.CHANGE_NICK_NO)) {
+                    textArea.appendText("Error during changing nickname.\n");
+                }
+
+                if (str.startsWith(Command.CHANGE_NICK_OK)) {
+                    String[] token = str.split("\\s");
+                    nickname = token[1];
+                    setTitle(nickname);
+                }
+
+                if (str.startsWith(Command.MESSAGES)) {
+                    String[] token = str.split("\\s", 2);
+                    textArea.clear();
+                    textArea.appendText(token[1]);
+                }
+
+            } else {
+                textArea.appendText(str + "\n");
+            }
+
+        }
+
     }
 
 
@@ -196,7 +213,7 @@ public class Controller implements Initializable {
         }
     }
 
-    public void trytoAuth(ActionEvent actionEvent) {
+    public void tryToAuth(ActionEvent actionEvent) {
         if (socket == null || socket.isClosed()) {
             connect();
         }
@@ -213,13 +230,12 @@ public class Controller implements Initializable {
     private void setTitle(String title) {
         Platform.runLater(() -> {
             if (title.equals("")) {
-                stage.setTitle("Квазимодо");
+                stage.setTitle("Chat");
             } else {
-                stage.setTitle(String.format("Квазимодо [ %s ]", title));
+                stage.setTitle(String.format("Chat [ %s ]", title));
             }
         });
     }
-
 
     public void clientListClicked(MouseEvent mouseEvent) {
         System.out.println(clientList.getSelectionModel().getSelectedItem());
@@ -243,7 +259,7 @@ public class Controller implements Initializable {
             regController.setController(this);
 
             regStage = new Stage();
-            regStage.setTitle("Квазимодо регистрация");
+            regStage.setTitle("Chat registration");
             regStage.setScene(new Scene(root, 400, 300));
 
             regStage.initModality(Modality.APPLICATION_MODAL);
