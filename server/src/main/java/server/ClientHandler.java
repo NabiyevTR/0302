@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
-public class ClientHandler {
+public class ClientHandler implements Runnable{
     private Server server;
     private Socket socket;
     private final int SOCKET_TIMEOUT = 120_000;
@@ -20,46 +20,46 @@ public class ClientHandler {
     private String nickname;
     private String login;
 
-    public ClientHandler(Server server, Socket socket) {
+    public ClientHandler(Server server, Socket socket)  {
         try {
             this.server = server;
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-
-            new Thread(() -> {
-                try {
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-                    authentication();
-                    process();
-
-                } catch (SocketTimeoutException e) {
-                    try {
-                        System.out.println("Socket timeout for client " + socket.getRemoteSocketAddress());
-                        out.writeUTF(Command.END);
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (RuntimeException e) {
-                    System.out.println(e.getMessage());
-                } finally {
-                    System.out.printf("Client %s disconnected.\n", socket.getRemoteSocketAddress());
-                    server.unsubscribe(this);
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    @Override
+    public void run() {
+
+        try {
+            socket.setSoTimeout(SOCKET_TIMEOUT);
+            authentication();
+            process();
+
+        } catch (SocketTimeoutException e) {
+            try {
+                System.out.println("Socket timeout for client " + socket.getRemoteSocketAddress());
+                out.writeUTF(Command.END);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            System.out.printf("Client %s disconnected.\n", socket.getRemoteSocketAddress());
+            server.unsubscribe(this);
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private void authentication() throws IOException {
         while (true) {

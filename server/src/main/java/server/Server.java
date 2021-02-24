@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class Server {
@@ -27,6 +29,8 @@ public class Server {
     private final  WordCorrector wordCorrector;
     //private final String LOG_FILE_PATH = "C:\\Users\\HP 8570W\\Google Диск\\Программирование\\java\\03\\0302\\server\\src\\main\\resources";
     private final String LOG_FILE_PATH = "C:\\test\\chatLog.txt";
+    private static final int MAX_CONNECTIONS = 2;
+    ExecutorService serverExecutor;
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
@@ -34,27 +38,30 @@ public class Server {
         messageLogger = new SimpleMessageLogger(LOG_FILE_PATH);
         messageLogger.setNumberOfMessagesToRead(3);
         wordCorrector = new SimpleWordCorrector();
-        HashMap<String, String> map = new LinkedHashMap<>();
-        wordCorrector.forceAddAll(map);
+
+
 
         try {
+            serverExecutor = Executors.newFixedThreadPool(MAX_CONNECTIONS);
             server = new ServerSocket(PORT);
             System.out.println("Server started.");
 
             while (true) {
                 socket = server.accept();
                 System.out.println("Client connected " + socket.getRemoteSocketAddress());
-                new ClientHandler(this, socket);
+                serverExecutor.execute(new ClientHandler(this,socket));
             }
 
         } catch (IOException e) {
             e.printStackTrace();
+
         } finally {
             try {
                 wordCorrector.close();
                 messageLogger.close();
                 authService.close();
                 server.close();
+                serverExecutor.shutdown();
             } catch (IOException e) {
                 e.printStackTrace();
             }
