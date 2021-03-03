@@ -1,10 +1,16 @@
 package server.authservice;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import server.Server;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 
 public class DBAuthService implements AuthService {
+
+    private final Logger logger = LogManager.getLogger(DBAuthService.class);
 
     private static final String url = "jdbc:mysql://localhost:3306/chat";
     private static final String user = "root";
@@ -17,21 +23,20 @@ public class DBAuthService implements AuthService {
     private static final String sqlSelectLoginByLoginAndPassword = "SELECT `login` FROM `users` WHERE `login`=? AND `password`=? ";
     private static final String sqlSelectLoginByLogin = "SELECT `login` FROM `users` WHERE `login`=?";
 
-    private  Connection connection;
-    private  ResultSet resultSet;
+    private Connection connection;
+    private ResultSet resultSet;
 
     public DBAuthService() {
         try {
             init();
             connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Auth service started.");
+            logger.info("Auth service started.");
         } catch (Exception e) {
-            System.out.println("Auth service failed to start.");
-            System.out.println(e);
+            logger.fatal("Auth service failed to start.", e);
             try {
                 close();
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                logger.error("Auth service failed to close.", ioException);
             }
         }
     }
@@ -41,12 +46,12 @@ public class DBAuthService implements AuthService {
         try {
             resultSet.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to close result set." ,e);
         }
         try {
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to close connection." ,e);
         }
     }
 
@@ -64,7 +69,7 @@ public class DBAuthService implements AuthService {
                 return resultSet.getString("nickname");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return null;
         }
         return null;
@@ -87,7 +92,7 @@ public class DBAuthService implements AuthService {
             preparedStatement.executeBatch();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
     }
@@ -104,7 +109,7 @@ public class DBAuthService implements AuthService {
             preparedStatement.executeBatch();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
 
@@ -122,7 +127,7 @@ public class DBAuthService implements AuthService {
             preparedStatement.executeBatch();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
         return true;
@@ -138,7 +143,7 @@ public class DBAuthService implements AuthService {
                 if (login.equals(resultSet.getString("login"))) return true;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
         return false;
@@ -153,7 +158,7 @@ public class DBAuthService implements AuthService {
                 if (login.equals(resultSet.getString("login"))) return true;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
         return false;

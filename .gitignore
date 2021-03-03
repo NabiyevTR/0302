@@ -6,3 +6,5 @@ client/target/classes/client/Main.class
 server/mysql-connector-java-8.0.23.jar
 
 .idea/uiDesigner.xml
+
+.idea/sonarlint/issuestore/index.pb

@@ -1,11 +1,17 @@
 package server.messagelogger;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import server.Server;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleMessageLogger implements MessageLogger {
+
+    private final Logger logger = LogManager.getLogger(Server.class);
 
     private static final int NUMBER_OF_MESSAGES_TO_READ = 100;
 
@@ -20,23 +26,23 @@ public class SimpleMessageLogger implements MessageLogger {
 
     public void init(String path) {
 
-          try {
-              setFile(path);
-          } catch (NullPointerException e) {
-              System.out.println(e.getMessage());
-              isActive = false;
-          }
+        try {
+            setFile(path);
+        } catch (NullPointerException e) {
+            logger.error("File name is null.", e);
+            isActive = false;
+        }
 
         try {
             writer = new BufferedWriter(new FileWriter(logFile, true));
-            System.out.println("Message logger started.");
+            logger.info("Message logger started.");
             isActive = true;
         } catch (IOException e) {
-            System.out.println("IO error in SimpleMessageLogger.");
+            logger.error("IO error in SimpleMessageLogger.",e);
             try {
                 close();
             } catch (IOException ex) {
-                System.out.println("Error occurred during closing reader/writer.");
+                logger.error("Error occurred during closing reader/writer.",e);
             }
         }
     }
@@ -61,8 +67,10 @@ public class SimpleMessageLogger implements MessageLogger {
         if (path == null) throw new NullPointerException("File name is null.");
         logFile = new File(path);
         if (!Files.isWritable(logFile.toPath())) {
-            System.out.printf("Cannot write to %s. File is already opened by another application", logFile.getName());
             isActive = false;
+            logger.error(
+                    String.format("Cannot write to %s. File is already opened by another application", logFile.getName())
+            );
         }
     }
 
@@ -78,8 +86,9 @@ public class SimpleMessageLogger implements MessageLogger {
                 messageList.add(reader.readLine());
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.printf("Cannot read from file: %s. An IOexception has occurred.\n", logFile.getName());
+            logger.error(
+                    String.format("Cannot read from file: %s. An IOexception has occurred.", logFile.getName())
+            );
         }
 
         //get last lines
@@ -96,7 +105,9 @@ public class SimpleMessageLogger implements MessageLogger {
     @Override
     public synchronized void write(String message) {
         if (message == null) {
-            System.out.printf("Cannot write to file %s. Message is null.\n", logFile.getName());
+            logger.error(
+                    String.format("Cannot write to file %s. Message is null.", logFile.getName())
+            );
             return;
         }
         if (!isActive) return;
@@ -104,10 +115,13 @@ public class SimpleMessageLogger implements MessageLogger {
             writer.write(message);
             writer.newLine();
             writer.flush();
-            System.out.printf("Log to file %s: %s.\n", logFile.getName(), message);
+            logger.info(
+                    String.format("Log to file %s: %s.", logFile.getName(), message)
+            );
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.printf("Cannot write to file: %s. An IOexception has occurred.\n", logFile.getName());
+            logger.error(
+                    String.format("Cannot write to file: %s. An IOexception has occurred.", logFile.getName())
+            );
         }
     }
 }

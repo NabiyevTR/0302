@@ -1,12 +1,15 @@
 package server;
 
 import commands.Command;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import server.authservice.AuthService;
 import server.authservice.DBAuthService;
 import server.messagecorrector.SimpleWordCorrector;
 import server.messagecorrector.WordCorrector;
 import server.messagelogger.MessageLogger;
 import server.messagelogger.SimpleMessageLogger;
+
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -25,8 +28,13 @@ public class Server {
     private final int PORT = 8189;
     private final List<ClientHandler> clients;
     private final AuthService authService;
+
+    // Custom logger for logging messages from users
     private final MessageLogger messageLogger;
-    private final  WordCorrector wordCorrector;
+
+    // Log4j logger
+    private final Logger logger = LogManager.getLogger(Server.class);
+    private final WordCorrector wordCorrector;
     //private final String LOG_FILE_PATH = "C:\\Users\\HP 8570W\\Google Диск\\Программирование\\java\\03\\0302\\server\\src\\main\\resources";
     private final String LOG_FILE_PATH = "C:\\test\\chatLog.txt";
     private static final int MAX_CONNECTIONS = 2;
@@ -40,21 +48,19 @@ public class Server {
         wordCorrector = new SimpleWordCorrector();
 
 
-
         try {
             serverExecutor = Executors.newFixedThreadPool(MAX_CONNECTIONS);
             server = new ServerSocket(PORT);
-            System.out.println("Server started.");
+            logger.info("Server started");
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Client connected " + socket.getRemoteSocketAddress());
-                serverExecutor.execute(new ClientHandler(this,socket));
+                logger.info("Client connected " + socket.getRemoteSocketAddress());
+                serverExecutor.execute(new ClientHandler(this, socket));
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
-
+            logger.fatal("Server failed", e);
         } finally {
             try {
                 wordCorrector.close();
@@ -63,7 +69,7 @@ public class Server {
                 server.close();
                 serverExecutor.shutdown();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Error has occurred during closing server", e);
             }
         }
     }
@@ -78,6 +84,7 @@ public class Server {
             c.sendMsg(message);
         }
         logMessage(message);
+        logger.debug("Client send message: " + message);
     }
 
     public void logMessage(String msg) {
