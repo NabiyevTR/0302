@@ -1,12 +1,18 @@
 package server.messagecorrector;
 
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import server.authservice.DBAuthService;
+
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.Map;
 
 
 public class SimpleWordCorrector implements WordCorrector {
+
+    private final Logger logger = LogManager.getLogger(SimpleWordCorrector.class);
 
     private static final String url = "jdbc:mysql://localhost:3306/chat";
     private static final String user = "root";
@@ -25,10 +31,9 @@ public class SimpleWordCorrector implements WordCorrector {
             init();
             connection = DriverManager.getConnection(url, user, password);
             isActive = true;
-            System.out.println("Word corrector service started.");
+            logger.info("Word corrector service started.");
         } catch (Exception e) {
-            System.out.println("Word corrector service failed to start.");
-            System.out.println(e);
+            logger.error("Word corrector service failed to start.", e);
             isActive = false;
             close();
         }
@@ -48,7 +53,7 @@ public class SimpleWordCorrector implements WordCorrector {
         try {
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to close connection." ,e);
         }
     }
 
@@ -135,7 +140,7 @@ public class SimpleWordCorrector implements WordCorrector {
             preparedStatement.executeBatch();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return false;
         }
     }
@@ -155,13 +160,13 @@ public class SimpleWordCorrector implements WordCorrector {
                 return resultSet.getString("correctedWord");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Failed to execute prepared statement." ,e);
             return null;
         } finally {
             try {
                 resultSet.close();
             } catch (SQLException throwables) {
-                throwables.printStackTrace();
+                logger.error("Failed to close result set." ,throwables);
             }
         }
         return null;

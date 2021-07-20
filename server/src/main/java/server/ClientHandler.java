@@ -1,6 +1,8 @@
 package server;
 
 import commands.Command;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,10 +11,15 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
-public class ClientHandler implements Runnable{
+
+public class ClientHandler implements Runnable {
+
+    private final Logger logger = LogManager.getLogger(ClientHandler.class);
+
     private Server server;
     private Socket socket;
-    private final int SOCKET_TIMEOUT = 120_000;
+
+    private static final int SOCKET_TIMEOUT = 120_000;
 
     private DataInputStream in;
     private DataOutputStream out;
@@ -20,14 +27,14 @@ public class ClientHandler implements Runnable{
     private String nickname;
     private String login;
 
-    public ClientHandler(Server server, Socket socket)  {
+    public ClientHandler(Server server, Socket socket) {
         try {
             this.server = server;
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Client handler failed.", e);
         }
     }
 
@@ -41,22 +48,22 @@ public class ClientHandler implements Runnable{
 
         } catch (SocketTimeoutException e) {
             try {
-                System.out.println("Socket timeout for client " + socket.getRemoteSocketAddress());
                 out.writeUTF(Command.END);
+                logger.info("Socket timeout for client " + socket.getRemoteSocketAddress());
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                logger.error("Failed to send command.", ioException);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("IOException exception has occurred.", e);
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            logger.error("Runtime exception has occurred.", e);
         } finally {
-            System.out.printf("Client %s disconnected.\n", socket.getRemoteSocketAddress());
             server.unsubscribe(this);
+            logger.info(String.format("Client %s disconnected.", socket.getRemoteSocketAddress()));
             try {
                 socket.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Failed to close socket.", e);
             }
         }
     }
@@ -83,8 +90,9 @@ public class ClientHandler implements Runnable{
             String message = in.readUTF();
 
             if (message.startsWith("/")) {
-
-                System.out.printf("Request from %s: %s.\n", socket.getRemoteSocketAddress(), message);
+                logger.debug(
+                        String.format("Request from %s: %s.", socket.getRemoteSocketAddress(), message)
+                );
 
                 if (message.equals(Command.END)) {
                     endConnection();
@@ -121,8 +129,9 @@ public class ClientHandler implements Runnable{
         if (msg == null) return;
         try {
             out.writeUTF(msg);
+            logger.debug("Server sent the message to client: " + msg);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Failed to send message.", e);
         }
     }
 
